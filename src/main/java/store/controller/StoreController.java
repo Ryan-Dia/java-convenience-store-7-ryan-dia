@@ -25,12 +25,11 @@ public class StoreController {
             Items items = inventory.setItems();
             OutputView.printItems(items);
             getOrder();
+            confirmMembershipDiscount();
         } catch (Exception e) {
             e.getMessage();
         }
-
     }
-
 
     private void getOrder() {
         while (true) {
@@ -80,6 +79,16 @@ public class StoreController {
                 break;
             } catch (IllegalArgumentException ex) {
                 OutputView.printMessage(ex.getMessage());
+            }
+        }
+    }
+
+    private String confirmMembershipDiscount() {
+        while (true) {
+            try {
+                return InputView.readMembershipDiscountConfirmation();
+            } catch (IllegalArgumentException e) {
+                OutputView.printMessage(e.getMessage());
             }
         }
     }

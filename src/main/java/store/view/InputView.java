@@ -22,6 +22,11 @@ public final class InputView {
         return readInput();
     }
 
+    public static String readMembershipDiscountConfirmation() {
+        System.out.printf("멤버십 할인을 받으시겠습니까? (Y/N)\n");
+        return readInput();
+    }
+
     private static String readInput() {
         String input = Console.readLine().trim();
 
