@@ -1,18 +1,23 @@
 package store.model;
 
-import store.model.promotion.Promotion;
-
 public class Item {
     private final String name;
     private final int price;
-    private final int quantity;
-    private final Promotion promotion;
+    private final String promotionName;
+    private int quantity;
 
-    public Item(String name, int price, int quantity, Promotion promotion) {
+    public Item(String name, int price, int quantity, String promotionName) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
-        this.promotion = promotion;
+        this.promotionName = promotionName;
+    }
+
+    void decreaseQuantity(int quantity) {
+        if (quantity == 0) {
+            throw new IllegalArgumentException("[ERROR] 현재 수량이 0이기 때문에 더 이상 감소시킬 수 없습니다.");
+        }
+        this.quantity -= quantity;
     }
 
     public String getName() {
@@ -27,7 +32,7 @@ public class Item {
         return quantity;
     }
 
-    public Promotion getPromotion() {
-        return promotion;
+    public String getPromotionName() {
+        return promotionName;
     }
 }
