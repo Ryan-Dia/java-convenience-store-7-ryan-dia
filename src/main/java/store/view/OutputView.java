@@ -41,47 +41,36 @@ public final class OutputView {
     }
 
     public static void printReceipt(Order order, PaymentSummary paymentSummary) {
-        int maxNameLength = 2;
-        int maxQuantityLength = "수량".length();
-        int maxAmountLength = "금액".length();
+        printItems(order);
+        printGiveaway(order);
+        printPaymentSummary(paymentSummary);
+    }
 
-        // 각 열의 최대 길이를 계산
+    private static void printItems(Order order) {
+        System.out.printf(ReceiptFormType.START_LINE.getText());
+        System.out.printf(ReceiptFormType.HEADER.getFormatted(), "상품명", "수량", "금액");
         for (OrderItem item : order.getOrderItems()) {
-            maxNameLength = Math.max(maxNameLength, item.getName().length());
-            maxQuantityLength = Math.max(maxQuantityLength, String.valueOf(item.getTotalOrderQuantity()).length());
-            maxAmountLength = Math.max(maxAmountLength, String.format("%,d", 0).length());
+            System.out.printf(ReceiptFormType.ITEM.getFormatted(), item.getName(), item.getTotalOrderQuantity(),
+                    item.getTotalOrderQuantity() * item.getPrice());
         }
+    }
 
-        int nameLength = 20 - (maxNameLength * 2);
-
-        // 포맷 설정
-        String headerFormat = String.format("%%-%ds %%-%ds %%%ds%n", nameLength, 1,
-                maxAmountLength);
-        String itemFormat = String.format("%%-%ds %%%dd %%,%dd%n", nameLength, 1,
-                maxAmountLength);
-
-        System.out.println("==============W 편의점================");
-        System.out.printf(headerFormat, "상품명", "수량", "금액");
-
-        for (OrderItem item : order.getOrderItems()) {
-            System.out.printf(itemFormat, item.getName(), item.getTotalOrderQuantity(), item.getPrice());
-        }
-
-        System.out.println("=============증\t정===============");
-
+    private static void printGiveaway(Order order) {
+        System.out.printf(ReceiptFormType.GIVEAWAY_LINE.getText());
         for (OrderItem item : order.getOrderItems()) {
             if (item.getPromotionAppliedQuantity() != 0) {
-                System.out.printf("%-" + (maxNameLength + 4) + "s %" + (maxQuantityLength + 4) + "d%n", item.getName(),
+                System.out.printf(ReceiptFormType.GIVEAWAY.getFormatted(), item.getName(),
                         item.getPromotionAppliedQuantity());
             }
         }
+    }
 
-        System.out.println("====================================");
-        String totalFormat = String.format("%%-%ds %%%ds %%,%dd%n", maxNameLength + 4, maxQuantityLength + 4,
-                maxAmountLength + 6);
-        System.out.printf(totalFormat, "총구매액", "", paymentSummary.totalAmount());
-        System.out.printf(totalFormat, "행사할인", "", -paymentSummary.promotionDiscount());
-        System.out.printf(totalFormat, "멤버십할인", "", -paymentSummary.membershipDiscount());
-        System.out.printf(totalFormat, "내실돈", "", paymentSummary.finalAmount());
+    private static void printPaymentSummary(PaymentSummary paymentSummary) {
+        System.out.printf(ReceiptFormType.SEPARATOR.getText());
+        System.out.printf(ReceiptFormType.TOTAL_AMOUNT.getFormatted(), "총구매액", paymentSummary.totalQuantity(),
+                paymentSummary.totalAmount());
+        System.out.printf(ReceiptFormType.DISCOUNT.getFormatted(), "행사할인", "", paymentSummary.promotionDiscount());
+        System.out.printf(ReceiptFormType.DISCOUNT.getFormatted(), "멤버십할인", "", paymentSummary.membershipDiscount());
+        System.out.printf(ReceiptFormType.AMOUNT_DUE.getFormatted(), "내실돈", "", paymentSummary.finalAmount());
     }
 }
