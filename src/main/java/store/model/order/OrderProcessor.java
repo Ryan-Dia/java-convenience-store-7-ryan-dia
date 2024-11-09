@@ -10,7 +10,13 @@ public class OrderProcessor {
         this.inventory = inventory;
     }
 
-    public void processOrderForItem(String itemName, int orderQuantity) {
+    public void setPrice(OrderItem orderItem) {
+        inventory.setPrice(orderItem);
+    }
+
+    public void processOrderForItem(OrderItem orderItem) {
+        String itemName = orderItem.getName();
+        int orderQuantity = orderItem.getQuantity();
         int totalAvailableQuantity = inventory.getTotalQuantityForItem(itemName);
         int promoAvailableQuantity = inventory.getPromotionQuantityForItem(itemName);
         // 전체 프로모션+일반 개수 총합보다 더 많이 주문했다면 예외 0 재입력
@@ -20,7 +26,7 @@ public class OrderProcessor {
 
         //TODO: 프로모션 아예 없어서 일반구매
         if (!inventory.hasPromotion(itemName)) {
-            inventory.consumeRegularItem(itemName, orderQuantity);
+            inventory.consumeRegularItem(itemName, orderQuantity, orderItem);
             return;
         }
 
@@ -28,22 +34,21 @@ public class OrderProcessor {
         if (inventory.isPromotionInactive(itemName)) {
             int inactivePromotionQuantity = inventory.getInactivePromotionQuantity(itemName);
             if (inactivePromotionQuantity >= orderQuantity) {
-                inventory.consumePromotionItemWithoutPromotion(itemName, orderQuantity);
+                inventory.consumePromotionItemWithoutPromotion(itemName, orderQuantity, orderItem);
                 return;
             }
             int remainingQuantity = orderQuantity - inactivePromotionQuantity;
-            inventory.consumePromotionItemWithoutPromotion(itemName, inactivePromotionQuantity);
-            inventory.consumeRegularItem(itemName, remainingQuantity);
+            inventory.consumePromotionItemWithoutPromotion(itemName, inactivePromotionQuantity, orderItem);
+            inventory.consumeRegularItem(itemName, remainingQuantity, orderItem);
             return;
         }
 
-        //TODO: 프로모션으로 지급가능한 개수 파악 예를 들어 2+1 이고 재고가 3개이면
-        // 프로모션으로 구매 가능한 개수가 주문한 개수를 커버할 수 있다면 프로모션으로 처리
+        //TODO: 프로모션으로 구매 가능한 개수가 주문한 개수를 커버할 수 있다면 프로모션으로 처리
         // 1+1이면 최소 2개 2+1이면 최소 3개를 가지고 있어야 프로모션구매가 가능 그외는 통과처리
         int minPromotionQuantity = inventory.getMinPromotionQuantity(itemName);
 
         if (promoAvailableQuantity >= orderQuantity && minPromotionQuantity <= promoAvailableQuantity) {
-            inventory.consumePromotionItem(itemName, orderQuantity);
+            inventory.consumePromotionItem(itemName, orderQuantity, orderItem);
             return;
         }
 
@@ -52,18 +57,18 @@ public class OrderProcessor {
         int minPromotionApplicableQuantity = inventory.getMinPromotionApplicableQuantity(itemName);
 
         if (minPromotionApplicableQuantity > promoAvailableQuantity) {
-            inventory.consumePromotionItem(itemName, promoAvailableQuantity);
-            inventory.consumeRegularItem(itemName, orderQuantity - promoAvailableQuantity);
+            inventory.consumePromotionItem(itemName, orderQuantity, orderItem);
+            inventory.consumeRegularItem(itemName, orderQuantity - promoAvailableQuantity, orderItem);
             return;
         }
 
         // TODO: 일부만 프로모션 할인으로 구매 가능할 때 (프로모션 + 일반 구매)
         int applicablePromotionQuantity = inventory.getApplicablePromotionQuantity(itemName);
-        int remainingPromoQuantity = promoAvailableQuantity - applicablePromotionQuantity;
-        inventory.consumePromotionItem(itemName, applicablePromotionQuantity);
-        throw new PurchaseConfirmationWithoutPromotionException(itemName,
-                orderQuantity - applicablePromotionQuantity,
-                remainingPromoQuantity);
+        int remainingPromotionQuantity = promoAvailableQuantity - applicablePromotionQuantity;
+        int remainingQuantity = Math.abs(applicablePromotionQuantity - orderQuantity);
+        inventory.consumePromotionItem(itemName, applicablePromotionQuantity, orderItem);
+        throw new PurchaseConfirmationWithoutPromotionException(itemName, remainingQuantity,
+                remainingPromotionQuantity, orderItem);
         // 프로모션이 1+1이고  재고가 1개 남았는데 3개를 주문하면 안내후 구매해야함
         // 프로모션이 1+1이고  재고가 2개 / 일반 1개 남았는데 3개를 주문하면 안내후 모두 구매
         // -> 즉 프로모션을 받을 수 있응 개수가 충족했는데 프로모션 재고가 있으면 안내 만약 프로모션 받을 수 있는 최저 개수가 충족되지 않으면 그냥 바로
@@ -73,11 +78,11 @@ public class OrderProcessor {
     }
 
     public void parseUserChoice(String userChoice, String itemName, int withoutPromoQuantity,
-                                int remainingPromoQuantity) {
-        int regular = withoutPromoQuantity - remainingPromoQuantity;
+                                int remainingPromotionQuantity, OrderItem orderItem) {
+        int remainingQuantity = withoutPromoQuantity - remainingPromotionQuantity;
         if (userChoice.equals("Y")) {
-            inventory.consumePromotionItemWithoutPromotion(itemName, remainingPromoQuantity);
-            inventory.consumeRegularItem(itemName, regular);
+            inventory.consumePromotionItemWithoutPromotion(itemName, remainingPromotionQuantity, orderItem);
+            inventory.consumeRegularItem(itemName, remainingQuantity, orderItem);
         }
     }
 }

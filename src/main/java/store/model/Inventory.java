@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import store.error.PromotionConfirmationForFreeException;
+import store.model.order.OrderItem;
 import store.model.promotion.PromotionManager;
 import store.utils.MarkdownReader;
 
@@ -19,6 +20,14 @@ public class Inventory {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public void setPrice(OrderItem orderItem) {
+        for (Item item : items.getItems()) {
+            if (item.getName().equals(orderItem.getName())) {
+                orderItem.setPrice(item.getPrice());
+            }
+        }
     }
 
     public Items setItems() {
@@ -50,19 +59,22 @@ public class Inventory {
         }
     }
 
-    public void consumePromotionItemWithoutPromotion(String itemName, int orderQuantity) {
+    public void consumePromotionItemWithoutPromotion(String itemName, int orderQuantity, OrderItem orderItem) {
         for (Item itemInInventory : items.getItems()) {
-            if (!itemInInventory.getName().equals(itemName)) {
-                continue;
+            if (itemInInventory.getName().equals(itemName) && itemInInventory.getPromotionName() == null) {
+                decreaseQuantity(itemInInventory, orderQuantity);
+                orderItem.increaseTotalOrderQuantity(orderQuantity);
+                orderItem.increaseNonPromotionQuantity(orderQuantity);
+                return;
             }
-            decreaseQuantity(itemInInventory, orderQuantity);
+
         }
     }
 
 
     // TODO: ex) 2+1이라면 1개는 그냥 구매가능 2개는 혜택에 대한 안내 메시지 3개는 그냥 구매 4개 그냥구매 5개 안내
     // 무조건 프로모션 개수로 처리가능해서 이것만 신경쓰면 됩니당
-    public void consumePromotionItem(String itemName, int orderQuantity) {
+    public void consumePromotionItem(String itemName, int orderQuantity, OrderItem orderItem) {
         if (orderQuantity == 0) {
             return;
         }
@@ -80,43 +92,51 @@ public class Inventory {
             if (remainder != 0) {
                 shortfall = totalQuantity - remainder;
             }
+            int promotionQuantity = orderQuantity / totalQuantity;
 
             // 프로모션 개수에 딱 맞게 샀을 대
             if (remainder == 0) {
+
                 decreaseQuantity(itemInInventory, orderQuantity);
+                orderItem.increasePromotionAppliedQuantity(promotionQuantity);
+                orderItem.increaseTotalOrderQuantity(orderQuantity);
                 return;
             }
             // 프로모션 개수에 충족되지 않았을 때 (ex 2+1 인데 1개만 구매했을 때)
             // 1+1은 제외
             if (buyQuantity != freeQuantity && buyQuantity == shortfall) {
                 decreaseQuantity(itemInInventory, orderQuantity);
+                orderItem.increaseTotalOrderQuantity(orderQuantity);
                 return;
             }
             // 프로모션 개수에 충족되었는데 무료 증정 수량을 안 가져왔을 때
-            throw new PromotionConfirmationForFreeException(itemInInventory, orderQuantity, shortfall);
+            throw new PromotionConfirmationForFreeException(itemInInventory, orderItem, shortfall);
         }
     }
 
-    public void consumeRegularItem(String itemName, int quantity) {
+    public void consumeRegularItem(String itemName, int quantity, OrderItem orderItem) {
         for (Item itemInInventory : items.getItems()) {
             if (!itemInInventory.getName().equals(itemName) || itemInInventory.getPromotionName() != null) {
                 continue;
             }
 
-            int availableQuantity = itemInInventory.getQuantity();
-            if (availableQuantity >= quantity) {
-                itemInInventory.decreaseQuantity(quantity);
-                return;
-            }
+            itemInInventory.decreaseQuantity(quantity);
+            orderItem.increaseTotalOrderQuantity(quantity);
+            orderItem.increaseNonPromotionQuantity(quantity);
+            return;
+
         }
     }
 
-    public void parseUserChoice(String choice, Item itemInInventory, int orderQuantity, int shortfall) {
+    public void parseUserChoice(String choice, Item itemInInventory, OrderItem orderItem, int shortfall) {
         if (choice.equals("Y")) {
-            decreaseQuantity(itemInInventory, orderQuantity + shortfall);
+            decreaseQuantity(itemInInventory, orderItem.getQuantity() + shortfall);
+            orderItem.increaseTotalOrderQuantity(orderItem.getQuantity() + shortfall);
+            orderItem.increasePromotionAppliedQuantity(shortfall);
             return;
         }
-        decreaseQuantity(itemInInventory, orderQuantity);
+        decreaseQuantity(itemInInventory, orderItem.getQuantity());
+        orderItem.increaseTotalOrderQuantity(orderItem.getQuantity());
     }
 
     private void decreaseQuantity(Item itemInInventory, int quantity) {

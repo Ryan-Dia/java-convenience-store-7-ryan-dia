@@ -1,13 +1,14 @@
 package store.controller;
 
-import java.util.List;
 import store.error.PromotionConfirmationForFreeException;
 import store.error.PurchaseConfirmationWithoutPromotionException;
 import store.model.Inventory;
 import store.model.Items;
 import store.model.order.Order;
+import store.model.order.OrderCalculator;
 import store.model.order.OrderItem;
 import store.model.order.OrderProcessor;
+import store.model.order.PaymentSummary;
 import store.view.InputView;
 import store.view.OutputView;
 
@@ -24,34 +25,40 @@ public class StoreController {
         try {
             Items items = inventory.setItems();
             OutputView.printItems(items);
-            getOrder();
-            confirmMembershipDiscount();
+            Order order = getOrder();
+            String userMembershipInput = confirmMembershipDiscount();
+            boolean isMembership = userMembershipInput.equals("Y");
+            PaymentSummary paymentSummary = OrderCalculator.calculateAmounts(order.getOrderItems(), isMembership);
+            OutputView.printReceipt(order, paymentSummary);
         } catch (Exception e) {
             e.getMessage();
         }
     }
 
-    private void getOrder() {
+    private Order getOrder() {
         while (true) {
             try {
                 String userOrder = InputView.readItem();
                 Order order = new Order(userOrder);
-                fulfillOrder(order.getOrderItems());
-                return;
+                fulfillOrder(order);
+                return order;
             } catch (IllegalArgumentException e) {
                 OutputView.printMessage(e.getMessage());
             }
         }
     }
 
-    private void fulfillOrder(List<OrderItem> orderItems) {
-        for (OrderItem orderItem : orderItems) {
+    private void fulfillOrder(Order order) {
+        for (OrderItem orderItem : order.getOrderItems()) {
             try {
-                orderProcessor.processOrderForItem(orderItem.getName(), orderItem.getQuantity());
+                orderProcessor.processOrderForItem(orderItem);
+                orderProcessor.setPrice(orderItem);
             } catch (PromotionConfirmationForFreeException e) {
                 processPromotionConfirmationForFree(e);
+                orderProcessor.setPrice(orderItem);
             } catch (PurchaseConfirmationWithoutPromotionException e) {
                 processPurchaseConfirmationWithoutPromotion(e);
+                orderProcessor.setPrice(orderItem);
             }
         }
     }
@@ -61,7 +68,7 @@ public class StoreController {
             try {
                 String userChoice = InputView.readPromotionConfirmationForFree(e.getItem().getName(),
                         e.getShortfall());
-                inventory.parseUserChoice(userChoice, e.getItem(), e.getOrderQuantity(), e.getShortfall());
+                inventory.parseUserChoice(userChoice, e.getItem(), e.getOrderItem(), e.getShortfall());
                 break;
             } catch (IllegalArgumentException ex) {
                 OutputView.printMessage(ex.getMessage());
@@ -73,9 +80,10 @@ public class StoreController {
         while (true) {
             try {
                 String userChoice = InputView.readPurchaseConfirmationWithoutPromotion(e.getItemName(),
-                        e.getWithoutPromoQuantity());
-                orderProcessor.parseUserChoice(userChoice, e.getItemName(), e.getWithoutPromoQuantity(),
-                        e.getRemainingPromoQuantity());
+                        Math.abs(e.getRemainingQuantity()));
+                orderProcessor.parseUserChoice(userChoice, e.getItemName(), e.getRemainingQuantity(),
+                        e.getRemainingPromotionQuantity(),
+                        e.getOrderItem());
                 break;
             } catch (IllegalArgumentException ex) {
                 OutputView.printMessage(ex.getMessage());
