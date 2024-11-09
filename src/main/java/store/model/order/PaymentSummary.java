@@ -1,4 +1,5 @@
 package store.model.order;
 
-public record PaymentSummary(long totalAmount, long promotionDiscount, long membershipDiscount, long finalAmount) {
+public record PaymentSummary(long totalQuantity, long totalAmount, long promotionDiscount, long membershipDiscount,
+                             long finalAmount) {
 }

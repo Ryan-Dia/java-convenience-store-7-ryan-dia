@@ -8,12 +8,19 @@ public final class OrderCalculator {
     }
 
     public static PaymentSummary calculateAmounts(List<OrderItem> orderItems, boolean isMembership) {
+        long totalQuantity = getTotalQuantity(orderItems);
         long totalAmount = getTotalAmount(orderItems);
         long promotionDiscount = getPromotionDiscount(orderItems);
         long membershipDiscount = getMembershipDiscount(getTotalNonPromotionAmount(orderItems), isMembership);
         long finalAmount = totalAmount - promotionDiscount - membershipDiscount;
 
-        return new PaymentSummary(totalAmount, promotionDiscount, membershipDiscount, finalAmount);
+        return new PaymentSummary(totalQuantity, totalAmount, promotionDiscount, membershipDiscount, finalAmount);
+    }
+
+    private static long getTotalQuantity(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToLong(item -> item.getTotalOrderQuantity())
+                .sum();
     }
 
     private static long getTotalAmount(List<OrderItem> orderItems) {

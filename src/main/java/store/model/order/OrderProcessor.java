@@ -77,12 +77,11 @@ public class OrderProcessor {
 
     }
 
-    public void parseUserChoice(String userChoice, String itemName, int withoutPromoQuantity,
+    public void parseUserChoice(String userChoice, String itemName, int remainingQuantity,
                                 int remainingPromotionQuantity, OrderItem orderItem) {
-        int remainingQuantity = withoutPromoQuantity - remainingPromotionQuantity;
         if (userChoice.equals("Y")) {
             inventory.consumePromotionItemWithoutPromotion(itemName, remainingPromotionQuantity, orderItem);
-            inventory.consumeRegularItem(itemName, remainingQuantity, orderItem);
+            inventory.consumeRegularItem(itemName, remainingQuantity - remainingPromotionQuantity, orderItem);
         }
     }
 }
