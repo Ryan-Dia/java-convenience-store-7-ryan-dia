@@ -21,15 +21,23 @@ public class StoreController {
         this.orderProcessor = new OrderProcessor(inventory);
     }
 
-    public void run() {
+    public void start() {
+        Items items = inventory.setItems();
+        run(items);
+    }
+
+    private void run(Items items) {
         try {
-            Items items = inventory.setItems();
             OutputView.printItems(items);
             Order order = getOrder();
             String userMembershipInput = confirmMembershipDiscount();
             boolean isMembership = userMembershipInput.equals("Y");
             PaymentSummary paymentSummary = OrderCalculator.calculateAmounts(order.getOrderItems(), isMembership);
             OutputView.printReceipt(order, paymentSummary);
+            String additionalPurchaseConfirmation = getAdditionalPurchaseConfirmation();
+            if (additionalPurchaseConfirmation.equals("Y")) {
+                run(items);
+            }
         } catch (Exception e) {
             e.getMessage();
         }
@@ -95,6 +103,16 @@ public class StoreController {
         while (true) {
             try {
                 return InputView.readMembershipDiscountConfirmation();
+            } catch (IllegalArgumentException e) {
+                OutputView.printMessage(e.getMessage());
+            }
+        }
+    }
+
+    private String getAdditionalPurchaseConfirmation() {
+        while (true) {
+            try {
+                return InputView.readAdditionalPurchaseConfirmation();
             } catch (IllegalArgumentException e) {
                 OutputView.printMessage(e.getMessage());
             }

@@ -61,16 +61,14 @@ public class Inventory {
 
     public void consumePromotionItemWithoutPromotion(String itemName, int orderQuantity, OrderItem orderItem) {
         for (Item itemInInventory : items.getItems()) {
-            if (itemInInventory.getName().equals(itemName) && itemInInventory.getPromotionName() == null) {
+            if (itemInInventory.getName().equals(itemName) && itemInInventory.getPromotionName() != null) {
                 decreaseQuantity(itemInInventory, orderQuantity);
                 orderItem.increaseTotalOrderQuantity(orderQuantity);
                 orderItem.increaseNonPromotionQuantity(orderQuantity);
                 return;
             }
-
         }
     }
-
 
     // TODO: ex) 2+1이라면 1개는 그냥 구매가능 2개는 혜택에 대한 안내 메시지 3개는 그냥 구매 4개 그냥구매 5개 안내
     // 무조건 프로모션 개수로 처리가능해서 이것만 신경쓰면 됩니당
@@ -107,6 +105,7 @@ public class Inventory {
             if (buyQuantity != freeQuantity && buyQuantity == shortfall) {
                 decreaseQuantity(itemInInventory, orderQuantity);
                 orderItem.increaseTotalOrderQuantity(orderQuantity);
+                orderItem.increaseNonPromotionQuantity(orderQuantity);
                 return;
             }
             // 프로모션 개수에 충족되었는데 무료 증정 수량을 안 가져왔을 때
