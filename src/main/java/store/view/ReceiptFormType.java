@@ -5,8 +5,8 @@ public enum ReceiptFormType {
     ITEM("%%-%ds\t %%-%dd %%-,%dd%n", 16, 9, 9),
     GIVEAWAY("%%-%ds\t %%-%dd%n", 16, 9),
     TOTAL_AMOUNT("%%-%ds\t %%-%dd %%-,%dd%n", 16, 9, 9),
-    DISCOUNT("%%-%ds\t %%-%dd -%%-,%dd%n", 16, 9, 9),
-    AMOUNT_DUE("%%-%ds\t %%-%dd %%-,%dd%n", 16, 9, 9),
+    DISCOUNT("%%-%ds\t %%-%ds -%%-,%dd%n", 16, 9, 9),
+    AMOUNT_DUE("%%-%ds\t %%-%ds %%-,%dd%n", 16, 9, 9),
     START_LINE("================W 편의점================\n"),
     GIVEAWAY_LINE("=============증        정===============\n"),
     SEPARATOR("=======================================\n");
