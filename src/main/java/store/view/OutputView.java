@@ -65,32 +65,35 @@ public final class OutputView {
     }
 
     private static void printItems(Order order) {
-        System.out.printf(ReceiptFormType.START_LINE.getText());
-        System.out.printf(ReceiptFormType.HEADER.getFormatted(), ITEM_NAME, QUANTITY, PRICE);
+        printF(ReceiptFormType.START_LINE.getText());
+        printF(ReceiptFormType.HEADER.getFormatted(), ITEM_NAME, QUANTITY, PRICE);
         for (OrderItem item : order.getOrderItems()) {
-            System.out.printf(ReceiptFormType.ITEM.getFormatted(), item.getName(), item.getTotalOrderQuantity(),
+            printF(ReceiptFormType.ITEM.getFormatted(), item.getName(), item.getTotalOrderQuantity(),
                     item.getTotalOrderQuantity() * item.getPrice());
         }
     }
 
     private static void printGiveaway(Order order) {
-        System.out.printf(ReceiptFormType.GIVEAWAY_LINE.getText());
+        printF(ReceiptFormType.GIVEAWAY_LINE.getText());
         for (OrderItem item : order.getOrderItems()) {
             int promotionAppliedQuantity = item.getPromotionAppliedQuantity();
             if (promotionAppliedQuantity != 0) {
-                System.out.printf(ReceiptFormType.GIVEAWAY.getFormatted(), item.getName(), promotionAppliedQuantity);
+                printF(ReceiptFormType.GIVEAWAY.getFormatted(), item.getName(), promotionAppliedQuantity);
             }
         }
     }
 
     private static void printPaymentSummary(PaymentSummary paymentSummary) {
-        System.out.printf(ReceiptFormType.SEPARATOR.getText());
-        System.out.printf(ReceiptFormType.TOTAL_AMOUNT.getFormatted(), TOTAL_AMOUNT, paymentSummary.totalQuantity(),
+        printF(ReceiptFormType.SEPARATOR.getText());
+        printF(ReceiptFormType.TOTAL_AMOUNT.getFormatted(), TOTAL_AMOUNT, paymentSummary.totalQuantity(),
                 paymentSummary.totalAmount());
-        System.out.printf(ReceiptFormType.DISCOUNT.getFormatted(), PROMOTION, EMPTY,
-                paymentSummary.promotionDiscount());
-        System.out.printf(ReceiptFormType.DISCOUNT.getFormatted(), MEMBERSHIP_DISCOUNT, EMPTY,
+        printF(ReceiptFormType.DISCOUNT.getFormatted(), PROMOTION, EMPTY, paymentSummary.promotionDiscount());
+        printF(ReceiptFormType.DISCOUNT.getFormatted(), MEMBERSHIP_DISCOUNT, EMPTY,
                 paymentSummary.membershipDiscount());
-        System.out.printf(ReceiptFormType.AMOUNT_DUE.getFormatted(), AMOUNT_DUE, EMPTY, paymentSummary.finalAmount());
+        printF(ReceiptFormType.AMOUNT_DUE.getFormatted(), AMOUNT_DUE, EMPTY, paymentSummary.finalAmount());
+    }
+
+    private static void printF(String message, Object... args) {
+        System.out.printf(message, args);
     }
 }
