@@ -1,5 +1,6 @@
 package store.controller;
 
+import java.util.NoSuchElementException;
 import store.error.PromotionConfirmationForFreeException;
 import store.error.PurchaseConfirmationWithoutPromotionException;
 import store.model.item.Inventory;
@@ -24,15 +25,11 @@ public class StoreController {
         try {
             OutputView.printItems(inventory.getItems());
             Order order = getOrder();
-            String userMembershipInput = confirmMembershipDiscount();
-            boolean isMembership = userMembershipInput.equals("Y");
-            PaymentSummary paymentSummary = OrderCalculator.calculateAmounts(order.getOrderItems(), isMembership);
-            OutputView.printReceipt(order, paymentSummary);
-            String additionalPurchaseConfirmation = getAdditionalPurchaseConfirmation();
-            if (additionalPurchaseConfirmation.equals("Y")) {
+            printReceipt(order, isMembershipDiscountAccepted());
+            if (isAdditionalPurchaseConfirmed()) {
                 run();
             }
-        } catch (Exception e) {
+        } catch (NoSuchElementException e) {
             e.getMessage();
         }
     }
@@ -54,14 +51,12 @@ public class StoreController {
         for (OrderItem orderItem : order.getOrderItems()) {
             try {
                 orderProcessor.processOrder(orderItem);
-                orderProcessor.setPrice(orderItem);
             } catch (PromotionConfirmationForFreeException e) {
                 processPromotionConfirmationForFree(e);
-                orderProcessor.setPrice(orderItem);
             } catch (PurchaseConfirmationWithoutPromotionException e) {
                 processPurchaseConfirmationWithoutPromotion(e);
-                orderProcessor.setPrice(orderItem);
             }
+            orderProcessor.setPrice(orderItem);
         }
     }
 
@@ -70,7 +65,7 @@ public class StoreController {
             try {
                 String userChoice = InputView.readPromotionConfirmationForFree(e.getItem().getName(),
                         e.getShortfall());
-                inventory.parseUserChoice(userChoice, e.getItem(), e.getOrderItem(), e.getShortfall());
+                inventory.parseUserChoiceForFree(userChoice, e.getItem(), e.getOrderItem(), e.getShortfall());
                 break;
             } catch (IllegalArgumentException ex) {
                 OutputView.printMessage(ex.getMessage());
@@ -81,11 +76,9 @@ public class StoreController {
     private void processPurchaseConfirmationWithoutPromotion(PurchaseConfirmationWithoutPromotionException e) {
         while (true) {
             try {
-                String userChoice = InputView.readPurchaseConfirmationWithoutPromotion(e.getItemName(),
-                        Math.abs(e.getRemainingQuantity()));
-                orderProcessor.parseUserChoice(userChoice, e.getItemName(), e.getRemainingQuantity(),
-                        e.getRemainingPromotionQuantity(),
-                        e.getOrderItem());
+                String userChoice = getUserChoice(e);
+                inventory.parseUserChoiceWithoutPromotion(userChoice, e.getOrderItem(),
+                        e.getRemainingPromotionQuantity(), e.getRemainingQuantity());
                 break;
             } catch (IllegalArgumentException ex) {
                 OutputView.printMessage(ex.getMessage());
@@ -93,14 +86,30 @@ public class StoreController {
         }
     }
 
-    private String confirmMembershipDiscount() {
+    private String getUserChoice(PurchaseConfirmationWithoutPromotionException e) {
+        return InputView.readPurchaseConfirmationWithoutPromotion(e.getItemName(),
+                Math.abs(e.getRemainingQuantity()));
+    }
+
+    private void printReceipt(Order order, boolean isMembership) {
+        PaymentSummary paymentSummary = OrderCalculator.calculateAmounts(order.getOrderItems(), isMembership);
+        OutputView.printReceipt(order, paymentSummary);
+    }
+
+    private boolean isMembershipDiscountAccepted() {
         while (true) {
             try {
-                return InputView.readMembershipDiscountConfirmation();
+                String userMembershipInput = InputView.readMembershipDiscountConfirmation();
+                return userMembershipInput.equals("Y");
             } catch (IllegalArgumentException e) {
                 OutputView.printMessage(e.getMessage());
             }
         }
+    }
+
+    private boolean isAdditionalPurchaseConfirmed() {
+        String additionalPurchaseConfirmation = getAdditionalPurchaseConfirmation();
+        return additionalPurchaseConfirmation.equals("Y");
     }
 
     private String getAdditionalPurchaseConfirmation() {
