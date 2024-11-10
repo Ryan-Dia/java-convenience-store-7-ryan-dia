@@ -19,25 +19,25 @@ public final class OrderCalculator {
 
     private static long getTotalQuantity(List<OrderItem> orderItems) {
         return orderItems.stream()
-                .mapToLong(item -> item.getTotalOrderQuantity())
+                .mapToLong(orderitem -> orderitem.getTotalOrderQuantity())
                 .sum();
     }
 
     private static long getTotalAmount(List<OrderItem> orderItems) {
         return orderItems.stream()
-                .mapToLong(item -> item.getPrice() * item.getTotalOrderQuantity())
+                .mapToLong(item -> (long) item.getPrice() * item.getTotalOrderQuantity())
                 .sum();
     }
 
     private static long getPromotionDiscount(List<OrderItem> orderItems) {
         return orderItems.stream()
-                .mapToLong(item -> item.getPrice() * item.getPromotionAppliedQuantity())
+                .mapToLong(item -> (long) item.getPrice() * item.getPromotionAppliedQuantity())
                 .sum();
     }
 
     private static long getTotalNonPromotionAmount(List<OrderItem> orderItems) {
         return orderItems.stream()
-                .mapToLong(item -> item.getPrice() * item.getNonPromotionQuantity())
+                .mapToLong(item -> (long) item.getPrice() * item.getNonPromotionQuantity())
                 .sum();
     }
 
