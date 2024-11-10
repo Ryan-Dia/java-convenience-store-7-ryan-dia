@@ -7,8 +7,8 @@ public class Promotion {
     private final String name;
     private final int buy;
     private final int get;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private final LocalDateTime startDate;
+    private final LocalDateTime endDate;
 
     protected Promotion(String name, int buy, int get, LocalDateTime startDate, LocalDateTime endDate) {
         this.name = name;
