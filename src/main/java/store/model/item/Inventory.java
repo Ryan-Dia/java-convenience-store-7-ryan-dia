@@ -104,20 +104,11 @@ public class Inventory {
         }
     }
 
-    // TODO: orderQuantity가 0이 들어왔을 때 고려해야함
     public void consumePromotionItem(int orderQuantity, OrderItem orderItem) {
         Item itemInInventory = findItemForPromotion(orderItem.getName());
         Promotion promotion = promotionManager.getPromotion(itemInInventory.getPromotionName());
         PromotionCalculation promotionData = PromotionCalculation.of(promotion, orderQuantity);
-        if (promotionData.hasExactPromotionQuantity()) {
-            processPromotion(itemInInventory, orderItem, orderQuantity, promotionData.getPromotionAppliedQuantity());
-            return;
-        }
-        if (promotionData.hasPartialPromotion()) {
-            processNonPromotion(itemInInventory, orderItem, orderQuantity);
-            return;
-        }
-        throw new PromotionConfirmationForFreeException(itemInInventory, orderItem, promotionData.getShortfall());
+        processPromotionItem(orderQuantity, orderItem, promotionData, itemInInventory);
     }
 
     private Item findItemForPromotion(String itemName) {
@@ -135,6 +126,19 @@ public class Inventory {
                 && item.getPromotionName() != null
                 && promotion != null
                 && promotion.isPromotionActive();
+    }
+
+    private void processPromotionItem(int orderQuantity, OrderItem orderItem, PromotionCalculation promotionData,
+                                      Item itemInInventory) {
+        if (promotionData.hasExactPromotionQuantity()) {
+            processPromotion(itemInInventory, orderItem, orderQuantity, promotionData.getPromotionAppliedQuantity());
+            return;
+        }
+        if (promotionData.hasPartialPromotion()) {
+            processNonPromotion(itemInInventory, orderItem, orderQuantity);
+            return;
+        }
+        throw new PromotionConfirmationForFreeException(itemInInventory, orderItem, promotionData.getShortfall());
     }
 
     private void processPromotion(Item item, OrderItem orderItem, int orderQuantity, int promotionQuantity) {
@@ -179,7 +183,7 @@ public class Inventory {
         int promotionQuantityForItem = getPromotionQuantityForItem(itemName);
         int minPromotionQuantity = getMinPromotionQuantity(itemName);
         if (minPromotionQuantity == 0) {
-            throw new IllegalStateException("일어나면 안되는 에러가 발생했습니다. : Inventory");
+            throw new IllegalStateException("[ERROR] 일어나면 안되는 에러가 발생했습니다. : Inventory");
         }
         int remainder = promotionQuantityForItem % minPromotionQuantity;
         return promotionQuantityForItem - remainder;
