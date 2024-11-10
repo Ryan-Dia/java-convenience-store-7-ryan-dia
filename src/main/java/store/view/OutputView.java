@@ -13,26 +13,31 @@ public final class OutputView {
     public static void printItems(Items items) {
         printMessage("안녕하세요. W편의점입니다.\n현재 보유하고 있는 상품입니다.\n");
         for (Item item : items.getItems()) {
-            var promotionName = item.getPromotionName();
-            int quantity = item.getQuantity();
+            String message = applyFormat(item);
+            printMessage(message);
+        }
+    }
 
-            if (promotionName == null && quantity != 0) {
-                printMessage(String.format("- %s %,d원 %s개", item.getName(), item.getPrice(), quantity));
-                continue;
-            }
-            if (promotionName == null) {
-                printMessage(String.format("- %s %,d원 %s", item.getName(), item.getPrice(), "재고 없음"));
-                continue;
-            }
+    private static String applyFormat(Item item) {
+        StringBuilder message = new StringBuilder();
+        message.append(String.format("- %s %,d원 ", item.getName(), item.getPrice()));
 
-            if (quantity == 0) {
-                printMessage(String.format("- %s %,d원 %s %s", item.getName(), item.getPrice(), "재고 없음",
-                        promotionName));
-                continue;
-            }
+        int quantity = item.getQuantity();
+        String promotionName = item.getPromotionName();
+        appendItemDetails(quantity, promotionName, message);
 
-            printMessage(String.format("- %s %,d원 %s개 %s", item.getName(), item.getPrice(), quantity,
-                    promotionName));
+        return message.toString();
+    }
+
+    private static void appendItemDetails(int quantity, String promotionName, StringBuilder message) {
+        if (quantity == 0) {
+            message.append("재고 없음");
+        }
+        if (quantity > 0) {
+            message.append(String.format("%d개", quantity));
+        }
+        if (promotionName != null) {
+            message.append(" ").append(promotionName);
         }
     }
 
