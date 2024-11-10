@@ -8,6 +8,7 @@ public final class Membership {
     }
 
     public static long calculateDiscount(long amount) {
-        return amount * DISCOUNT_PERCENTAGE / 100;
+        long discountAmount = amount * DISCOUNT_PERCENTAGE / 100;
+        return Math.min(discountAmount, MAX_DISCOUNT);
     }
 }

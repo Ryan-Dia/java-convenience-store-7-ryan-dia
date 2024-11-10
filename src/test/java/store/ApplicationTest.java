@@ -98,6 +98,20 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
+    void 멤버십할인의_최대값은_8천원이다() {
+        assertSimpleTest(() -> {
+            run("[콜라-20],[정식도시락-6],[에너지바-5],[물-10]", "Y", "Y");
+            assertThat(output().replaceAll("\\s", ""))
+                    .doesNotContain("무료로더받을수있습니다.추가하시겠습니까?")
+                    .contains("총구매액4173,400")
+                    .contains("행사할인-3,000")
+                    .contains("멤버십할인-8,00")
+                    .contains("내실돈62,400")
+                    .contains("감사합니다.구매하고싶은다른상품이있나요?");
+        });
+    }
+
+    @Test
     void 예외_테스트() {
         assertSimpleTest(() -> {
             runException("[컵라면-12]", "N", "N");
