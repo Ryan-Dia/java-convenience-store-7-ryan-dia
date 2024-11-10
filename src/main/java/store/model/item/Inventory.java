@@ -6,6 +6,8 @@ import java.util.List;
 import store.error.FileParsingException;
 import store.error.PromotionConfirmationForFreeException;
 import store.model.order.OrderItem;
+import store.model.promotion.Promotion;
+import store.model.promotion.PromotionCalculation;
 import store.model.promotion.PromotionManager;
 import store.utils.MarkdownReader;
 
@@ -91,47 +93,49 @@ public class Inventory {
         }
     }
 
-    // TODO: ex) 2+1이라면 1개는 그냥 구매가능 2개는 혜택에 대한 안내 메시지 3개는 그냥 구매 4개 그냥구매 5개 안내
-    // 무조건 프로모션 개수로 처리가능해서 이것만 신경쓰면 됩니당
+    // TODO: orderQuantity가 0이 들어왔을 때 고려해야함
     public void consumePromotionItem(String itemName, int orderQuantity, OrderItem orderItem) {
-        if (orderQuantity == 0) {
+        Item itemInInventory = findItemForPromotion(itemName);
+        Promotion promotion = promotionManager.getPromotion(itemInInventory.getPromotionName());
+        PromotionCalculation promotionData = PromotionCalculation.of(promotion, orderQuantity);
+        if (promotionData.hasExactPromotionQuantity()) {
+            processPromotion(itemInInventory, orderItem, orderQuantity, promotionData.getPromotionAppliedQuantity());
             return;
         }
-        for (Item itemInInventory : items.getItems()) {
-            if (!itemInInventory.getName().equals(itemName) || itemInInventory.getPromotionName() == null
-                    || !promotionManager.getPromotion(itemInInventory.getPromotionName()).isPromotionActive()) {
-                continue;
-            }
-
-            int buyQuantity = promotionManager.getPromotion(itemInInventory.getPromotionName()).getBuy();
-            int freeQuantity = promotionManager.getPromotion(itemInInventory.getPromotionName()).getGet();
-            int totalQuantity = getMinPromotionQuantity(itemName);
-            int remainder = orderQuantity % totalQuantity;
-            int shortfall = 0;
-            if (remainder != 0) {
-                shortfall = totalQuantity - remainder;
-            }
-            int promotionQuantity = orderQuantity / totalQuantity;
-
-            // 프로모션 개수에 딱 맞게 샀을 대
-            if (remainder == 0) {
-
-                decreaseQuantity(itemInInventory, orderQuantity);
-                orderItem.increasePromotionAppliedQuantity(promotionQuantity);
-                orderItem.increaseTotalOrderQuantity(orderQuantity);
-                return;
-            }
-            // 프로모션 개수에 충족되지 않았을 때 (ex 2+1 인데 1개만 구매했을 때)
-            // 1+1은 제외
-            if (buyQuantity != freeQuantity && buyQuantity == shortfall) {
-                decreaseQuantity(itemInInventory, orderQuantity);
-                orderItem.increaseTotalOrderQuantity(orderQuantity);
-                orderItem.increaseNonPromotionQuantity(orderQuantity);
-                return;
-            }
-            // 프로모션 개수에 충족되었는데 무료 증정 수량을 안 가져왔을 때
-            throw new PromotionConfirmationForFreeException(itemInInventory, orderItem, shortfall);
+        if (promotionData.hasPartialPromotion()) {
+            processNonPromotion(itemInInventory, orderItem, orderQuantity);
+            return;
         }
+        throw new PromotionConfirmationForFreeException(itemInInventory, orderItem, promotionData.getShortfall());
+    }
+
+    private Item findItemForPromotion(String itemName) {
+        return items.getItems().stream()
+                .filter(item -> {
+                    Promotion promotion = promotionManager.getPromotion(item.getPromotionName());
+                    return isEligibleForPromotion(item, itemName, promotion);
+                })
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 상품목록에 존재하지 않는 상품입니다."));
+    }
+
+    private boolean isEligibleForPromotion(Item item, String itemName, Promotion promotion) {
+        return item.getName().equals(itemName)
+                && item.getPromotionName() != null
+                && promotion != null
+                && promotion.isPromotionActive();
+    }
+
+    private void processPromotion(Item item, OrderItem orderItem, int orderQuantity, int promotionQuantity) {
+        decreaseQuantity(item, orderQuantity);
+        orderItem.increaseTotalOrderQuantity(orderQuantity);
+        orderItem.increasePromotionAppliedQuantity(promotionQuantity);
+    }
+
+    private void processNonPromotion(Item item, OrderItem orderItem, int orderQuantity) {
+        decreaseQuantity(item, orderQuantity);
+        orderItem.increaseTotalOrderQuantity(orderQuantity);
+        orderItem.increaseNonPromotionQuantity(orderQuantity);
     }
 
     public void consumeRegularItem(String itemName, int quantity, OrderItem orderItem) {
@@ -139,12 +143,9 @@ public class Inventory {
             if (!itemInInventory.getName().equals(itemName) || itemInInventory.getPromotionName() != null) {
                 continue;
             }
-
             itemInInventory.decreaseQuantity(quantity);
             orderItem.increaseTotalOrderQuantity(quantity);
             orderItem.increaseNonPromotionQuantity(quantity);
-            return;
-
         }
     }
 
@@ -169,7 +170,6 @@ public class Inventory {
         if (minPromotionQuantity == 0) {
             throw new IllegalStateException("일어나면 안되는 에러가 발생했습니다. : Inventory");
         }
-
         int remainder = promotionQuantityForItem % minPromotionQuantity;
         return promotionQuantityForItem - remainder;
     }
