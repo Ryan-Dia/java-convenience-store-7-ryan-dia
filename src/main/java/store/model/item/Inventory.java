@@ -1,4 +1,4 @@
-package store.model;
+package store.model.item;
 
 import java.io.IOException;
 import java.util.ArrayList;

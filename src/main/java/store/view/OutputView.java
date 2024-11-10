@@ -1,7 +1,7 @@
 package store.view;
 
-import store.model.Item;
-import store.model.Items;
+import store.model.item.Item;
+import store.model.item.Items;
 import store.model.order.Order;
 import store.model.order.OrderItem;
 import store.model.order.PaymentSummary;

@@ -1,6 +1,6 @@
 package store.error;
 
-import store.model.Item;
+import store.model.item.Item;
 import store.model.order.OrderItem;
 
 public class PromotionConfirmationForFreeException extends RuntimeException {

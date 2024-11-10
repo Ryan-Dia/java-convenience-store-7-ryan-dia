@@ -1,7 +1,7 @@
 package store.model.order;
 
 import store.error.PurchaseConfirmationWithoutPromotionException;
-import store.model.Inventory;
+import store.model.item.Inventory;
 
 public class OrderProcessor {
     private final Inventory inventory;

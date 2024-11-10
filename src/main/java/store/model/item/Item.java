@@ -1,4 +1,4 @@
-package store.model;
+package store.model.item;
 
 public class Item {
     private final String name;

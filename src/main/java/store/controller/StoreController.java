@@ -2,8 +2,8 @@ package store.controller;
 
 import store.error.PromotionConfirmationForFreeException;
 import store.error.PurchaseConfirmationWithoutPromotionException;
-import store.model.Inventory;
-import store.model.Items;
+import store.model.item.Inventory;
+import store.model.item.Items;
 import store.model.order.Order;
 import store.model.order.OrderCalculator;
 import store.model.order.OrderItem;
