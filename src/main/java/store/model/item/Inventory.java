@@ -164,8 +164,16 @@ public class Inventory {
         }
     }
 
-    public void parseUserChoice(String choice, Item itemInInventory, OrderItem orderItem, int shortfall) {
-        if (choice.equals("Y")) {
+    public void parseUserChoiceWithoutPromotion(String userChoice, OrderItem orderItem, int remainingPromotionQuantity,
+                                                int remainingQuantity) {
+        if (userChoice.equals("Y")) {
+            consumePromotionItemWithoutPromotion(remainingPromotionQuantity, orderItem);
+            consumeRegularItem(orderItem.getName(), remainingQuantity - remainingPromotionQuantity, orderItem);
+        }
+    }
+
+    public void parseUserChoiceForFree(String userChoice, Item itemInInventory, OrderItem orderItem, int shortfall) {
+        if (userChoice.equals("Y")) {
             decreaseQuantity(itemInInventory, orderItem.getQuantity() + shortfall);
             orderItem.increaseTotalOrderQuantity(orderItem.getQuantity() + shortfall);
             orderItem.increasePromotionAppliedQuantity(shortfall);
