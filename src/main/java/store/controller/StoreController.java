@@ -53,7 +53,7 @@ public class StoreController {
     private void fulfillOrder(Order order) {
         for (OrderItem orderItem : order.getOrderItems()) {
             try {
-                orderProcessor.processOrderForItem(orderItem);
+                orderProcessor.processOrder(orderItem);
                 orderProcessor.setPrice(orderItem);
             } catch (PromotionConfirmationForFreeException e) {
                 processPromotionConfirmationForFree(e);

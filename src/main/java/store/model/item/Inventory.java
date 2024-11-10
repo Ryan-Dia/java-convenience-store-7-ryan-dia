@@ -82,9 +82,20 @@ public class Inventory {
         return isLastItem || isDifferentNextItem;
     }
 
-    public void consumePromotionItemWithoutPromotion(String itemName, int orderQuantity, OrderItem orderItem) {
+    public void consumePromotionItemWithoutPromotion(OrderItem orderItem) {
         for (Item itemInInventory : items.getItems()) {
-            if (itemInInventory.getName().equals(itemName) && itemInInventory.getPromotionName() != null) {
+            if (itemInInventory.getName().equals(orderItem.getName()) && itemInInventory.getPromotionName() != null) {
+                decreaseQuantity(itemInInventory, orderItem.getQuantity());
+                orderItem.increaseTotalOrderQuantity(orderItem.getQuantity());
+                orderItem.increaseNonPromotionQuantity(orderItem.getQuantity());
+                return;
+            }
+        }
+    }
+
+    public void consumePromotionItemWithoutPromotion(int orderQuantity, OrderItem orderItem) {
+        for (Item itemInInventory : items.getItems()) {
+            if (itemInInventory.getName().equals(orderItem.getName()) && itemInInventory.getPromotionName() != null) {
                 decreaseQuantity(itemInInventory, orderQuantity);
                 orderItem.increaseTotalOrderQuantity(orderQuantity);
                 orderItem.increaseNonPromotionQuantity(orderQuantity);
@@ -94,8 +105,8 @@ public class Inventory {
     }
 
     // TODO: orderQuantity가 0이 들어왔을 때 고려해야함
-    public void consumePromotionItem(String itemName, int orderQuantity, OrderItem orderItem) {
-        Item itemInInventory = findItemForPromotion(itemName);
+    public void consumePromotionItem(int orderQuantity, OrderItem orderItem) {
+        Item itemInInventory = findItemForPromotion(orderItem.getName());
         Promotion promotion = promotionManager.getPromotion(itemInInventory.getPromotionName());
         PromotionCalculation promotionData = PromotionCalculation.of(promotion, orderQuantity);
         if (promotionData.hasExactPromotionQuantity()) {

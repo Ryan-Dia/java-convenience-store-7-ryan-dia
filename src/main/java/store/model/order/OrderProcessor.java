@@ -14,73 +14,91 @@ public class OrderProcessor {
         inventory.setPrice(orderItem);
     }
 
-    public void processOrderForItem(OrderItem orderItem) {
+    public void processOrder(OrderItem orderItem) {
+        checkOrderQuantity(orderItem);
+        processOrderForItem(orderItem);
+    }
+
+    private void processOrderForItem(OrderItem orderItem) {
+        if (processWithoutPromotion(orderItem)) {
+            return;
+        }
+        if (processInactivePromotion(orderItem)) {
+            return;
+        }
+        if (processPromotion(orderItem)) {
+            return;
+        }
+        processPartialPromotion(orderItem);
+    }
+
+    private void checkOrderQuantity(OrderItem orderItem) {
         String itemName = orderItem.getName();
         int orderQuantity = orderItem.getQuantity();
         int totalAvailableQuantity = inventory.getTotalQuantityForItem(itemName);
-        int promoAvailableQuantity = inventory.getPromotionQuantityForItem(itemName);
-        // 전체 프로모션+일반 개수 총합보다 더 많이 주문했다면 예외 0 재입력
+
         if (totalAvailableQuantity < orderQuantity) {
             throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
+    }
 
-        //TODO: 프로모션 아예 없거나 프로모션 재고가 모두 소진시 일반구매
+    private boolean processWithoutPromotion(OrderItem orderItem) {
+        String itemName = orderItem.getName();
+        int orderQuantity = orderItem.getQuantity();
+        int promoAvailableQuantity = inventory.getPromotionQuantityForItem(itemName);
         if (!inventory.hasPromotion(itemName) || promoAvailableQuantity == 0) {
             inventory.consumeRegularItem(itemName, orderQuantity, orderItem);
-            return;
+            return true;
         }
+        return false;
+    }
 
-        // TODO: 프로모션 기간이 아님
-        if (inventory.isPromotionInactive(itemName)) {
-            int inactivePromotionQuantity = inventory.getInactivePromotionQuantity(itemName);
-            if (inactivePromotionQuantity >= orderQuantity) {
-                inventory.consumePromotionItemWithoutPromotion(itemName, orderQuantity, orderItem);
-                return;
+    private boolean processInactivePromotion(OrderItem orderItem) {
+        if (inventory.isPromotionInactive(orderItem.getName())) {
+            int inactivePromotionQuantity = inventory.getInactivePromotionQuantity(orderItem.getName());
+            if (inactivePromotionQuantity >= orderItem.getQuantity()) {
+                inventory.consumePromotionItemWithoutPromotion(orderItem);
+                return true;
             }
-            int remainingQuantity = orderQuantity - inactivePromotionQuantity;
-            inventory.consumePromotionItemWithoutPromotion(itemName, inactivePromotionQuantity, orderItem);
-            inventory.consumeRegularItem(itemName, remainingQuantity, orderItem);
-            return;
+            return consumeNonPromotion(orderItem, inactivePromotionQuantity);
         }
+        return false;
+    }
 
-        //TODO: 프로모션으로 구매 가능한 개수가 주문한 개수를 커버할 수 있다면 프로모션으로 처리
-        // 1+1이면 최소 2개 2+1이면 최소 3개를 가지고 있어야 프로모션구매가 가능 그외는 통과처리
-        int minPromotionQuantity = inventory.getMinPromotionQuantity(itemName);
+    private boolean consumeNonPromotion(OrderItem orderItem, int inactivePromotionQuantity) {
+        String itemName = orderItem.getName();
+        int orderQuantity = orderItem.getQuantity();
+        int remainingQuantity = orderQuantity - inactivePromotionQuantity;
+        inventory.consumePromotionItemWithoutPromotion(inactivePromotionQuantity, orderItem);
+        inventory.consumeRegularItem(itemName, remainingQuantity, orderItem);
+        return true;
+    }
 
+    private boolean processPromotion(OrderItem orderItem) {
+        int orderQuantity = orderItem.getQuantity();
+        int promoAvailableQuantity = inventory.getPromotionQuantityForItem(orderItem.getName());
+        int minPromotionQuantity = inventory.getMinPromotionQuantity(orderItem.getName());
         if (promoAvailableQuantity >= orderQuantity && minPromotionQuantity <= promoAvailableQuantity) {
-            inventory.consumePromotionItem(itemName, orderQuantity, orderItem);
-            return;
+            inventory.consumePromotionItem(orderQuantity, orderItem);
+            return true;
         }
+        return false;
+    }
 
-        // TODO: 프로모션 최저 조건 수량이 안 돼서 안내없이 일반 구매 처리
-        // ex) 2+1 이면 프로모션 재고 1개 / 1+1 프로모션 재고 0개
-        int minPromotionApplicableQuantity = inventory.getMinPromotionApplicableQuantity(itemName);
-
-        if (minPromotionApplicableQuantity > promoAvailableQuantity) {
-            inventory.consumePromotionItem(itemName, orderQuantity, orderItem);
-            inventory.consumeRegularItem(itemName, orderQuantity - promoAvailableQuantity, orderItem);
-            return;
-        }
-
-        // TODO: 일부만 프로모션 할인으로 구매 가능할 때 (프로모션 + 일반 구매)
+    private void processPartialPromotion(OrderItem orderItem) {
+        String itemName = orderItem.getName();
+        int promoAvailableQuantity = inventory.getPromotionQuantityForItem(itemName);
         int applicablePromotionQuantity = inventory.getApplicablePromotionQuantity(itemName);
-        int remainingPromotionQuantity = promoAvailableQuantity - applicablePromotionQuantity;
-        int remainingQuantity = Math.abs(applicablePromotionQuantity - orderQuantity);
-        inventory.consumePromotionItem(itemName, applicablePromotionQuantity, orderItem);
+        int remainingQuantity = orderItem.getQuantity() - applicablePromotionQuantity;
+        inventory.consumePromotionItem(applicablePromotionQuantity, orderItem);
         throw new PurchaseConfirmationWithoutPromotionException(itemName, remainingQuantity,
-                remainingPromotionQuantity, orderItem);
-        // 프로모션이 1+1이고  재고가 1개 남았는데 3개를 주문하면 안내후 구매해야함
-        // 프로모션이 1+1이고  재고가 2개 / 일반 1개 남았는데 3개를 주문하면 안내후 모두 구매
-        // -> 즉 프로모션을 받을 수 있응 개수가 충족했는데 프로모션 재고가 있으면 안내 만약 프로모션 받을 수 있는 최저 개수가 충족되지 않으면 그냥 바로
-        // 안내없이 일반구매
-        // ex) 프로모션 콜라 10개 / 일반 콜라 10개   14개 구매시 4개는 프로모션 할인 적용 x
-
+                promoAvailableQuantity - applicablePromotionQuantity, orderItem);
     }
 
     public void parseUserChoice(String userChoice, String itemName, int remainingQuantity,
                                 int remainingPromotionQuantity, OrderItem orderItem) {
         if (userChoice.equals("Y")) {
-            inventory.consumePromotionItemWithoutPromotion(itemName, remainingPromotionQuantity, orderItem);
+            inventory.consumePromotionItemWithoutPromotion(remainingPromotionQuantity, orderItem);
             inventory.consumeRegularItem(itemName, remainingQuantity - remainingPromotionQuantity, orderItem);
         }
     }
