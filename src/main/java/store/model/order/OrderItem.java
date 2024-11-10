@@ -1,7 +1,13 @@
 package store.model.order;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class OrderItem {
     private static final String DELIMITER = "-";
+    private static final String REGEX = "[\\[\\]]";
+    private static final Pattern EACH_PATTERN = Pattern.compile("\\[([가-힣]+)-(\\d+)]");
+    private static final String EMPTY = "";
 
     private final String name;
     private final int quantity;
@@ -11,13 +17,21 @@ public class OrderItem {
     private int price = 0;
 
     public OrderItem(String item) {
+        validate(item);
         String[] itemData = parse(item);
         this.name = itemData[0];
         this.quantity = Integer.parseInt(itemData[1]);
     }
 
+    private void validate(String item) {
+        Matcher matcher = EACH_PATTERN.matcher(item);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+        }
+    }
+
     private String[] parse(String item) {
-        return item.split(DELIMITER);
+        return item.replaceAll(REGEX, EMPTY).split(DELIMITER);
     }
 
     public String getName() {
