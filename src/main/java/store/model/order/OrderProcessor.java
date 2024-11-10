@@ -55,12 +55,12 @@ public class OrderProcessor {
 
     private boolean processInactivePromotion(OrderItem orderItem) {
         if (inventory.isPromotionInactive(orderItem.getName())) {
-            int inactivePromotionQuantity = inventory.getInactivePromotionQuantity(orderItem.getName());
-            if (inactivePromotionQuantity >= orderItem.getQuantity()) {
+            int promotionQuantity = inventory.getPromotionItemQuantityByName(orderItem.getName());
+            if (promotionQuantity >= orderItem.getQuantity()) {
                 inventory.consumePromotionItemWithoutPromotion(orderItem);
                 return true;
             }
-            return consumeNonPromotion(orderItem, inactivePromotionQuantity);
+            return consumeNonPromotion(orderItem, promotionQuantity);
         }
         return false;
     }

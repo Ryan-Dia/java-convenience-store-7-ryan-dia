@@ -1,6 +1,7 @@
 package store.model.item;
 
 import java.io.IOException;
+import java.util.List;
 import store.error.FileParsingException;
 import store.error.PromotionConfirmationForFreeException;
 import store.model.order.OrderItem;
@@ -11,7 +12,7 @@ import store.model.promotion.PromotionManager;
 public class Inventory {
     private static final String PRODUCTS_FILE_PATH = "src/main/resources/products.md";
 
-    private final Items items;
+    private final ItemRepository itemRepository;
     private final PromotionManager promotionManager;
 
     public Inventory() {
@@ -20,16 +21,17 @@ public class Inventory {
 
     public Inventory(String productsFilePath) {
         try {
-            this.items = new Items(ItemLoader.getInstance().loadItems(productsFilePath));
             this.promotionManager = new PromotionManager();
             promotionManager.loadPromotions();
+            List<Item> items = ItemLoader.getInstance().loadItems(productsFilePath);
+            this.itemRepository = new ItemRepository(items, promotionManager);
         } catch (IOException e) {
             throw new FileParsingException(e);
         }
     }
 
     public void setPrice(OrderItem orderItem) {
-        for (Item item : items.getItems()) {
+        for (Item item : itemRepository.getItems()) {
             if (item.getName().equals(orderItem.getName())) {
                 orderItem.setPrice(item.getPrice());
             }
@@ -37,49 +39,27 @@ public class Inventory {
     }
 
     public void consumePromotionItemWithoutPromotion(OrderItem orderItem) {
-        for (Item itemInInventory : items.getItems()) {
-            if (itemInInventory.getName().equals(orderItem.getName()) && itemInInventory.getPromotionName() != null) {
-                decreaseQuantity(itemInInventory, orderItem.getQuantity());
-                orderItem.increaseTotalOrderQuantity(orderItem.getQuantity());
-                orderItem.increaseNonPromotionQuantity(orderItem.getQuantity());
-                return;
-            }
-        }
+        Item promotionItem = itemRepository.findPromotionItemByName(orderItem.getName());
+        int quantity = promotionItem.getQuantity();
+
+        decreaseQuantity(promotionItem, quantity);
+        orderItem.increaseTotalOrderQuantity(quantity);
+        orderItem.increaseNonPromotionQuantity(quantity);
     }
 
     public void consumePromotionItemWithoutPromotion(int orderQuantity, OrderItem orderItem) {
-        for (Item itemInInventory : items.getItems()) {
-            if (itemInInventory.getName().equals(orderItem.getName()) && itemInInventory.getPromotionName() != null) {
-                decreaseQuantity(itemInInventory, orderQuantity);
-                orderItem.increaseTotalOrderQuantity(orderQuantity);
-                orderItem.increaseNonPromotionQuantity(orderQuantity);
-                return;
-            }
-        }
+        Item promotionItem = itemRepository.findPromotionItemByName(orderItem.getName());
+
+        decreaseQuantity(promotionItem, orderQuantity);
+        orderItem.increaseTotalOrderQuantity(orderQuantity);
+        orderItem.increaseNonPromotionQuantity(orderQuantity);
     }
 
     public void consumePromotionItem(int orderQuantity, OrderItem orderItem) {
-        Item itemInInventory = findItemForPromotion(orderItem.getName());
+        Item itemInInventory = itemRepository.findOnlyActivePromotionItem(orderItem.getName());
         Promotion promotion = promotionManager.getPromotion(itemInInventory.getPromotionName());
         PromotionCalculation promotionData = PromotionCalculation.of(promotion, orderQuantity);
         processPromotionItem(orderQuantity, orderItem, promotionData, itemInInventory);
-    }
-
-    private Item findItemForPromotion(String itemName) {
-        return items.getItems().stream()
-                .filter(item -> {
-                    Promotion promotion = promotionManager.getPromotion(item.getPromotionName());
-                    return isEligibleForPromotion(item, itemName, promotion);
-                })
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 상품목록에 존재하지 않는 상품입니다."));
-    }
-
-    private boolean isEligibleForPromotion(Item item, String itemName, Promotion promotion) {
-        return item.getName().equals(itemName)
-                && item.getPromotionName() != null
-                && promotion != null
-                && promotion.isPromotionActive();
     }
 
     private void processPromotionItem(int orderQuantity, OrderItem orderItem, PromotionCalculation promotionData,
@@ -108,14 +88,10 @@ public class Inventory {
     }
 
     public void consumeRegularItem(String itemName, int quantity, OrderItem orderItem) {
-        for (Item itemInInventory : items.getItems()) {
-            if (!itemInInventory.getName().equals(itemName) || itemInInventory.getPromotionName() != null) {
-                continue;
-            }
-            itemInInventory.decreaseQuantity(quantity);
-            orderItem.increaseTotalOrderQuantity(quantity);
-            orderItem.increaseNonPromotionQuantity(quantity);
-        }
+        Item regularItem = itemRepository.findItemWithoutPromotionByName(itemName);
+        regularItem.decreaseQuantity(quantity);
+        orderItem.increaseTotalOrderQuantity(quantity);
+        orderItem.increaseNonPromotionQuantity(quantity);
     }
 
     public void parseUserChoiceWithoutPromotion(String userChoice, OrderItem orderItem, int remainingPromotionQuantity,
@@ -152,48 +128,30 @@ public class Inventory {
     }
 
     public int getMinPromotionQuantity(String itemName) {
-        return items.getItems().stream()
-                .filter(item -> item.getName().equals(itemName) && item.getPromotionName() != null)
-                .mapToInt(item -> promotionManager.getPromotion(item.getPromotionName()).getGet()
-                        + promotionManager.getPromotion(item.getPromotionName()).getBuy())
-                .sum();
+        return itemRepository.findMinPromotionQuantity(itemName);
     }
 
     public int getTotalQuantityForItem(String itemName) {
-        return items.getItems().stream()
-                .filter(item -> item.getName().equals(itemName))
-                .mapToInt(Item::getQuantity)
-                .sum();
+        return itemRepository.findTotalQuantityForItem(itemName);
     }
 
     public int getPromotionQuantityForItem(String itemName) {
-        return items.getItems().stream()
-                .filter(item -> item.getName().equals(itemName) && item.getPromotionName() != null
-                        && promotionManager.isPromotionActive(item.getPromotionName()))
-                .mapToInt(Item::getQuantity)
-                .sum();
+        return itemRepository.findPromotionQuantityForItem(itemName);
     }
 
-    public int getInactivePromotionQuantity(String itemName) {
-        return items.getItems().stream()
-                .filter(item -> item.getName().equals(itemName) && item.getPromotionName() != null)
-                .findFirst()
-                .map(Item::getQuantity)
-                .orElse(0);
+    public int getPromotionItemQuantityByName(String itemName) {
+        return itemRepository.findPromotionItemQuantityByName(itemName);
     }
 
     public boolean hasPromotion(String itemName) {
-        return items.getItems().stream()
-                .anyMatch(item -> item.getName().equals(itemName) && item.getPromotionName() != null);
+        return itemRepository.hasPromotion(itemName);
     }
 
     public boolean isPromotionInactive(String itemName) {
-        return items.getItems().stream()
-                .filter(item -> item.getName().equals(itemName) && item.getPromotionName() != null)
-                .anyMatch(item -> !promotionManager.isPromotionActive(item.getPromotionName()));
+        return itemRepository.isPromotionInactive(itemName);
     }
 
-    public Items getItems() {
-        return items;
+    public List<Item> getItems() {
+        return itemRepository.getItems();
     }
 }

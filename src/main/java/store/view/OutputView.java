@@ -1,7 +1,7 @@
 package store.view;
 
+import java.util.List;
 import store.model.item.Item;
-import store.model.item.Items;
 import store.model.order.Order;
 import store.model.order.OrderItem;
 import store.model.order.PaymentSummary;
@@ -23,9 +23,9 @@ public final class OutputView {
     private OutputView() {
     }
 
-    public static void printItems(Items items) {
+    public static void printItems(List<Item> items) {
         printMessage(ITEM_LIST_MESSAGE);
-        for (Item item : items.getItems()) {
+        for (Item item : items) {
             String message = applyFormat(item);
             printMessage(message);
         }
