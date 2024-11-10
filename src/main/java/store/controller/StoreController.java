@@ -3,7 +3,6 @@ package store.controller;
 import store.error.PromotionConfirmationForFreeException;
 import store.error.PurchaseConfirmationWithoutPromotionException;
 import store.model.item.Inventory;
-import store.model.item.Items;
 import store.model.order.Order;
 import store.model.order.OrderCalculator;
 import store.model.order.OrderItem;
@@ -21,14 +20,9 @@ public class StoreController {
         this.orderProcessor = new OrderProcessor(inventory);
     }
 
-    public void start() {
-        Items items = inventory.setItems();
-        run(items);
-    }
-
-    private void run(Items items) {
+    public void run() {
         try {
-            OutputView.printItems(items);
+            OutputView.printItems(inventory.getItems());
             Order order = getOrder();
             String userMembershipInput = confirmMembershipDiscount();
             boolean isMembership = userMembershipInput.equals("Y");
@@ -36,7 +30,7 @@ public class StoreController {
             OutputView.printReceipt(order, paymentSummary);
             String additionalPurchaseConfirmation = getAdditionalPurchaseConfirmation();
             if (additionalPurchaseConfirmation.equals("Y")) {
-                run(items);
+                run();
             }
         } catch (Exception e) {
             e.getMessage();

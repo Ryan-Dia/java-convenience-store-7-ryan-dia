@@ -3,23 +3,31 @@ package store.model.item;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import store.error.FileParsingException;
 import store.error.PromotionConfirmationForFreeException;
 import store.model.order.OrderItem;
 import store.model.promotion.PromotionManager;
 import store.utils.MarkdownReader;
 
 public class Inventory {
-    private Items items;
+    private static final String PRODUCTS_FILE_PATH = "src/main/resources/products.md";
+    private static final String NULL = "null";
+
+    private final Items items;
     private final PromotionManager promotionManager;
 
     public Inventory() {
+        this(PRODUCTS_FILE_PATH);
+    }
+
+    public Inventory(String productsFilePath) {
         try {
+            this.items = loadItemsFromFile(productsFilePath);
             this.promotionManager = new PromotionManager();
             promotionManager.loadPromotions();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FileParsingException(e);
         }
-
     }
 
     public void setPrice(OrderItem orderItem) {
@@ -30,33 +38,46 @@ public class Inventory {
         }
     }
 
-    public Items setItems() {
+    private Items loadItemsFromFile(String productsFilePath) {
         try {
-            List<String[]> itemData = MarkdownReader.readFile("src/main/resources/products.md");
-            List<Item> items = new ArrayList<>();
-
-            for (int i = 0; i < itemData.size(); i++) {
-                String[] item = itemData.get(i);
-                String name = item[0];
-                int price = Integer.parseInt(item[1]);
-                int quantity = Integer.parseInt(item[2]);
-                String promotionName = item[3];
-                if (promotionName.equals("null")) {
-                    promotionName = null;
-                }
-                items.add(new Item(name, price, quantity, promotionName));
-
-                boolean isLastItem = i == itemData.size() - 1;
-                boolean isDifferentNextItem = !isLastItem && !itemData.get(i + 1)[0].equals(name);
-                if (promotionName != null && (isLastItem || isDifferentNextItem)) {
-                    items.add(new Item(name, price, 0, null));
-                }
-            }
-            this.items = new Items(items);
-            return this.items;
+            List<String[]> itemData = MarkdownReader.readFile(productsFilePath);
+            List<Item> items = parseItems(itemData);
+            return new Items(items);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FileParsingException(e);
         }
+    }
+
+    private List<Item> parseItems(List<String[]> itemData) {
+        List<Item> items = new ArrayList<>();
+        for (int i = 0; i < itemData.size(); i++) {
+            Item item = parseItem(itemData.get(i));
+            items.add(item);
+            if (shouldAddNonPromotionItem(item, i, itemData)) {
+                items.add(new Item(item.getName(), item.getPrice(), 0, null));
+            }
+        }
+        return items;
+    }
+
+    private Item parseItem(String[] itemData) {
+        String name = itemData[0];
+        int price = Integer.parseInt(itemData[1]);
+        int quantity = Integer.parseInt(itemData[2]);
+        String promotionName = itemData[3];
+        if (NULL.equals(promotionName)) {
+            promotionName = null;
+        }
+        return new Item(name, price, quantity, promotionName);
+    }
+
+    private boolean shouldAddNonPromotionItem(Item currentItem, int currentIndex, List<String[]> itemData) {
+        if (currentItem.getPromotionName() == null) {
+            return false;
+        }
+        boolean isLastItem = currentIndex == itemData.size() - 1;
+        boolean isDifferentNextItem = !isLastItem && !itemData.get(currentIndex + 1)[0].equals(currentItem.getName());
+        return isLastItem || isDifferentNextItem;
     }
 
     public void consumePromotionItemWithoutPromotion(String itemName, int orderQuantity, OrderItem orderItem) {
@@ -202,5 +223,9 @@ public class Inventory {
         return items.getItems().stream()
                 .filter(item -> item.getName().equals(itemName) && item.getPromotionName() != null)
                 .anyMatch(item -> !promotionManager.isPromotionActive(item.getPromotionName()));
+    }
+
+    public Items getItems() {
+        return items;
     }
 }
