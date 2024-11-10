@@ -24,8 +24,8 @@ public class OrderProcessor {
             throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
 
-        //TODO: 프로모션 아예 없어서 일반구매
-        if (!inventory.hasPromotion(itemName)) {
+        //TODO: 프로모션 아예 없거나 프로모션 재고가 모두 소진시 일반구매
+        if (!inventory.hasPromotion(itemName) || promoAvailableQuantity == 0) {
             inventory.consumeRegularItem(itemName, orderQuantity, orderItem);
             return;
         }
