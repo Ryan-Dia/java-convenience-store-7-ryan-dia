@@ -19,7 +19,7 @@ public final class OrderCalculator {
 
     private static long getTotalQuantity(List<OrderItem> orderItems) {
         return orderItems.stream()
-                .mapToLong(orderitem -> orderitem.getTotalOrderQuantity())
+                .mapToLong(OrderItem::getTotalOrderQuantity)
                 .sum();
     }
 
