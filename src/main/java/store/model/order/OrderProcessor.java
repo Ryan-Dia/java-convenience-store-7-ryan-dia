@@ -94,12 +94,4 @@ public class OrderProcessor {
         throw new PurchaseConfirmationWithoutPromotionException(itemName, remainingQuantity,
                 promoAvailableQuantity - applicablePromotionQuantity, orderItem);
     }
-
-    public void parseUserChoice(String userChoice, String itemName, int remainingQuantity,
-                                int remainingPromotionQuantity, OrderItem orderItem) {
-        if (userChoice.equals("Y")) {
-            inventory.consumePromotionItemWithoutPromotion(remainingPromotionQuantity, orderItem);
-            inventory.consumeRegularItem(itemName, remainingQuantity - remainingPromotionQuantity, orderItem);
-        }
-    }
 }

@@ -228,15 +228,6 @@ public class Inventory {
                 .orElse(0);
     }
 
-
-    public int getMinPromotionApplicableQuantity(String itemName) {
-        return items.getItems().stream()
-                .filter(item -> item.getName().equals(itemName) && item.getPromotionName() != null)
-                .map(item -> promotionManager.getPromotion(item.getPromotionName()).getBuy())
-                .findFirst()
-                .orElse(0);
-    }
-
     public boolean hasPromotion(String itemName) {
         return items.getItems().stream()
                 .anyMatch(item -> item.getName().equals(itemName) && item.getPromotionName() != null);
