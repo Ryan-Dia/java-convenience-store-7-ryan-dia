@@ -3,9 +3,7 @@ package store.model;
 import java.util.function.Function;
 
 public enum SalesAmountType {
-    TOTAL_AMOUNT("총구매액", amount -> amount),
-    PROMOTION("행사할인", amount -> amount),
-    MEMBERSHIP("멤버십", Membership::calculateDiscount);
+    MEMBERSHIP("멤버십할인", Membership::calculateDiscount);
 
     private final String viewName;
     private final Function<Long, Long> expression;
