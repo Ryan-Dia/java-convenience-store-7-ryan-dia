@@ -9,10 +9,11 @@ import java.util.Map;
 import store.utils.MarkdownReader;
 
 public class PromotionManager {
+    private static final String PROMOTION_FILE_PATH = "src/main/resources/promotions.md";
     private final Map<String, Promotion> promotions = new HashMap<>();
 
     public void loadPromotions() throws IOException {
-        List<String[]> promotionData = MarkdownReader.readFile("src/main/resources/promotions.md");
+        List<String[]> promotionData = MarkdownReader.readFile(PROMOTION_FILE_PATH);
         generatePromotion(promotionData);
     }
 
