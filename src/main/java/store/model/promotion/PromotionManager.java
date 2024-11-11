@@ -10,6 +10,7 @@ import store.utils.MarkdownReader;
 
 public class PromotionManager {
     private static final String PROMOTION_FILE_PATH = "src/main/resources/promotions.md";
+
     private final Map<String, Promotion> promotions = new HashMap<>();
 
     public void loadPromotions() throws IOException {

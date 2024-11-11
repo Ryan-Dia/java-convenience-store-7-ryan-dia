@@ -3,6 +3,7 @@ package store.controller;
 import java.util.NoSuchElementException;
 import store.error.PromotionConfirmationForFreeException;
 import store.error.PurchaseConfirmationWithoutPromotionException;
+import store.model.Answer;
 import store.model.item.Inventory;
 import store.model.order.Order;
 import store.model.order.OrderCalculator;
@@ -100,7 +101,7 @@ public class StoreController {
         while (true) {
             try {
                 String userMembershipInput = InputView.readMembershipDiscountConfirmation();
-                return userMembershipInput.equals("Y");
+                return Answer.YES.isEqual(userMembershipInput);
             } catch (IllegalArgumentException e) {
                 OutputView.printMessage(e.getMessage());
             }
@@ -109,7 +110,7 @@ public class StoreController {
 
     private boolean isAdditionalPurchaseConfirmed() {
         String additionalPurchaseConfirmation = getAdditionalPurchaseConfirmation();
-        return additionalPurchaseConfirmation.equals("Y");
+        return Answer.YES.isEqual(additionalPurchaseConfirmation);
     }
 
     private String getAdditionalPurchaseConfirmation() {

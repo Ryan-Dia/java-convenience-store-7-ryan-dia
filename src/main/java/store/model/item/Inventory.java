@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import store.error.FileParsingException;
 import store.error.PromotionConfirmationForFreeException;
+import store.model.Answer;
 import store.model.order.OrderItem;
 import store.model.promotion.Promotion;
 import store.model.promotion.PromotionCalculation;
@@ -96,14 +97,14 @@ public class Inventory {
 
     public void parseUserChoiceWithoutPromotion(String userChoice, OrderItem orderItem, int remainingPromotionQuantity,
                                                 int remainingQuantity) {
-        if (userChoice.equals("Y")) {
+        if (Answer.YES.isEqual(userChoice)) {
             consumePromotionItemWithoutPromotion(remainingPromotionQuantity, orderItem);
             consumeRegularItem(orderItem.getName(), remainingQuantity - remainingPromotionQuantity, orderItem);
         }
     }
 
     public void parseUserChoiceForFree(String userChoice, Item itemInInventory, OrderItem orderItem, int shortfall) {
-        if (userChoice.equals("Y")) {
+        if (Answer.YES.isEqual(userChoice)) {
             itemRepository.decreaseQuantity(itemInInventory, orderItem.getQuantity() + shortfall);
             orderItem.increaseTotalOrderQuantity(orderItem.getQuantity() + shortfall);
             orderItem.increasePromotionAppliedQuantity(shortfall);
