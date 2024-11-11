@@ -89,4 +89,9 @@ public class ItemRepository {
                 .filter(item -> item.getName().equals(itemName) && item.getPromotionName() != null)
                 .anyMatch(item -> !promotionManager.isPromotionActive(item.getPromotionName()));
     }
+
+
+    public void decreaseQuantity(Item item, int quantity) {
+        item.decreaseQuantity(quantity);
+    }
 }

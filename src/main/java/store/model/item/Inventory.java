@@ -42,7 +42,7 @@ public class Inventory {
         Item promotionItem = itemRepository.findPromotionItemByName(orderItem.getName());
         int quantity = promotionItem.getQuantity();
 
-        decreaseQuantity(promotionItem, quantity);
+        itemRepository.decreaseQuantity(promotionItem, quantity);
         orderItem.increaseTotalOrderQuantity(quantity);
         orderItem.increaseNonPromotionQuantity(quantity);
     }
@@ -50,7 +50,7 @@ public class Inventory {
     public void consumePromotionItemWithoutPromotion(int orderQuantity, OrderItem orderItem) {
         Item promotionItem = itemRepository.findPromotionItemByName(orderItem.getName());
 
-        decreaseQuantity(promotionItem, orderQuantity);
+        itemRepository.decreaseQuantity(promotionItem, orderQuantity);
         orderItem.increaseTotalOrderQuantity(orderQuantity);
         orderItem.increaseNonPromotionQuantity(orderQuantity);
     }
@@ -76,13 +76,13 @@ public class Inventory {
     }
 
     private void processPromotion(Item item, OrderItem orderItem, int orderQuantity, int promotionQuantity) {
-        decreaseQuantity(item, orderQuantity);
+        itemRepository.decreaseQuantity(item, orderQuantity);
         orderItem.increaseTotalOrderQuantity(orderQuantity);
         orderItem.increasePromotionAppliedQuantity(promotionQuantity);
     }
 
     private void processNonPromotion(Item item, OrderItem orderItem, int orderQuantity) {
-        decreaseQuantity(item, orderQuantity);
+        itemRepository.decreaseQuantity(item, orderQuantity);
         orderItem.increaseTotalOrderQuantity(orderQuantity);
         orderItem.increaseNonPromotionQuantity(orderQuantity);
     }
@@ -104,17 +104,13 @@ public class Inventory {
 
     public void parseUserChoiceForFree(String userChoice, Item itemInInventory, OrderItem orderItem, int shortfall) {
         if (userChoice.equals("Y")) {
-            decreaseQuantity(itemInInventory, orderItem.getQuantity() + shortfall);
+            itemRepository.decreaseQuantity(itemInInventory, orderItem.getQuantity() + shortfall);
             orderItem.increaseTotalOrderQuantity(orderItem.getQuantity() + shortfall);
             orderItem.increasePromotionAppliedQuantity(shortfall);
             return;
         }
-        decreaseQuantity(itemInInventory, orderItem.getQuantity());
+        itemRepository.decreaseQuantity(itemInInventory, orderItem.getQuantity());
         orderItem.increaseTotalOrderQuantity(orderItem.getQuantity());
-    }
-
-    private void decreaseQuantity(Item itemInInventory, int quantity) {
-        itemInInventory.decreaseQuantity(quantity);
     }
 
     public int getApplicablePromotionQuantity(String itemName) {
