@@ -14,8 +14,11 @@ public class Item {
     }
 
     void decreaseQuantity(int quantity) {
-        if (quantity == 0) {
-            throw new IllegalArgumentException("[ERROR] 현재 수량이 0이기 때문에 더 이상 감소시킬 수 없습니다.");
+        if (quantity < 0) {
+            throw new IllegalArgumentException("[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.");
+        }
+        if (this.quantity == 0) {
+            throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
         this.quantity -= quantity;
     }
