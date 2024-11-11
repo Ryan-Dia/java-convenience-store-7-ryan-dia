@@ -31,6 +31,10 @@ public class Inventory {
         }
     }
 
+    public void validate(String itemName) {
+        itemRepository.validateItemName(itemName);
+    }
+
     public void setPrice(OrderItem orderItem) {
         for (Item item : itemRepository.getItems()) {
             if (item.getName().equals(orderItem.getName())) {

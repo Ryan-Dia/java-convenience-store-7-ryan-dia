@@ -94,4 +94,12 @@ public class ItemRepository {
     public void decreaseQuantity(Item item, int quantity) {
         item.decreaseQuantity(quantity);
     }
+
+    public void validateItemName(String itemName) {
+        boolean hasItemName = items.stream().anyMatch(item -> itemName.equals(item.getName()));
+        if (!hasItemName) {
+            throw new IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.");
+        }
+    }
+
 }

@@ -15,6 +15,7 @@ public class OrderProcessor {
     }
 
     public void processOrder(OrderItem orderItem) {
+        inventory.validate(orderItem.getName());
         checkOrderQuantity(orderItem);
         processOrderForItem(orderItem);
     }
