@@ -31,7 +31,7 @@ public class StoreController {
                 run();
             }
         } catch (NoSuchElementException e) {
-            e.getMessage();
+            OutputView.printMessage(e.getMessage());
         }
     }
 
@@ -64,8 +64,8 @@ public class StoreController {
     private void processPromotionConfirmationForFree(PromotionConfirmationForFreeException e) {
         while (true) {
             try {
-                String userChoice = InputView.readPromotionConfirmationForFree(e.getItem().getName(),
-                        e.getShortfall());
+                String userChoice = InputView.readPromotionConfirmationForFree(e.getItem().getName(), e.getShortfall());
+                Answer.validate(userChoice);
                 inventory.parseUserChoiceForFree(userChoice, e.getItem(), e.getOrderItem(), e.getShortfall());
                 break;
             } catch (IllegalArgumentException ex) {
@@ -88,8 +88,10 @@ public class StoreController {
     }
 
     private String getUserChoice(PurchaseConfirmationWithoutPromotionException e) {
-        return InputView.readPurchaseConfirmationWithoutPromotion(e.getItemName(),
+        String userChoice = InputView.readPurchaseConfirmationWithoutPromotion(e.getItemName(),
                 Math.abs(e.getRemainingQuantity()));
+        Answer.validate(userChoice);
+        return userChoice;
     }
 
     private void printReceipt(Order order, boolean isMembership) {
@@ -101,6 +103,7 @@ public class StoreController {
         while (true) {
             try {
                 String userMembershipInput = InputView.readMembershipDiscountConfirmation();
+                Answer.validate(userMembershipInput);
                 return Answer.YES.isEqual(userMembershipInput);
             } catch (IllegalArgumentException e) {
                 OutputView.printMessage(e.getMessage());
@@ -116,7 +119,9 @@ public class StoreController {
     private String getAdditionalPurchaseConfirmation() {
         while (true) {
             try {
-                return InputView.readAdditionalPurchaseConfirmation();
+                String userInput = InputView.readAdditionalPurchaseConfirmation();
+                Answer.validate(userInput);
+                return userInput;
             } catch (IllegalArgumentException e) {
                 OutputView.printMessage(e.getMessage());
             }

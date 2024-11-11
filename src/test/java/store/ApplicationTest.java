@@ -119,6 +119,14 @@ class ApplicationTest extends NsTest {
         });
     }
 
+    @Test
+    void YES_OR_NO_예외_테스트() {
+        assertSimpleTest(() -> {
+            runException("[물-1]", "test", "N");
+            assertThat(output()).contains("[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.");
+        });
+    }
+
     @Override
     public void runMain() {
         Application.main(new String[]{});
