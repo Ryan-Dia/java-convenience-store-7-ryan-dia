@@ -1,9 +1,9 @@
 package store.view;
 
 import java.util.List;
-import store.model.item.Item;
-import store.model.order.Order;
-import store.model.order.OrderItem;
+import store.dto.ItemDto;
+import store.dto.OrderDto;
+import store.dto.OrderItemDto;
 import store.model.order.PaymentSummary;
 
 public final class OutputView {
@@ -23,20 +23,20 @@ public final class OutputView {
     private OutputView() {
     }
 
-    public static void printItems(List<Item> items) {
+    public static void printItems(List<ItemDto> items) {
         printMessage(ITEM_LIST_MESSAGE);
-        for (Item item : items) {
+        for (ItemDto item : items) {
             String message = applyFormat(item);
             printMessage(message);
         }
     }
 
-    private static String applyFormat(Item item) {
+    private static String applyFormat(ItemDto item) {
         StringBuilder message = new StringBuilder();
-        message.append(String.format(ITEM_FORMAT, item.getName(), item.getPrice()));
+        message.append(String.format(ITEM_FORMAT, item.name(), item.price()));
 
-        int quantity = item.getQuantity();
-        String promotionName = item.getPromotionName();
+        int quantity = item.quantity();
+        String promotionName = item.promotionName();
         appendItemDetails(quantity, promotionName, message);
 
         return message.toString();
@@ -58,27 +58,27 @@ public final class OutputView {
         System.out.println(message);
     }
 
-    public static void printReceipt(Order order, PaymentSummary paymentSummary) {
+    public static void printReceipt(OrderDto order, PaymentSummary paymentSummary) {
         printItems(order);
         printGiveaway(order);
         printPaymentSummary(paymentSummary);
     }
 
-    private static void printItems(Order order) {
+    private static void printItems(OrderDto order) {
         printF(ReceiptFormType.START_LINE.getText());
         printF(ReceiptFormType.HEADER.getFormatted(), ITEM_NAME, QUANTITY, PRICE);
-        for (OrderItem item : order.getOrderItems()) {
-            printF(ReceiptFormType.ITEM.getFormatted(), item.getName(), item.getTotalOrderQuantity(),
-                    item.getTotalOrderQuantity() * item.getPrice());
+        for (OrderItemDto item : order.items()) {
+            printF(ReceiptFormType.ITEM.getFormatted(), item.name(), item.totalOrderQuantity(),
+                    item.totalOrderQuantity() * item.price());
         }
     }
 
-    private static void printGiveaway(Order order) {
+    private static void printGiveaway(OrderDto order) {
         printF(ReceiptFormType.GIVEAWAY_LINE.getText());
-        for (OrderItem item : order.getOrderItems()) {
-            int promotionAppliedQuantity = item.getPromotionAppliedQuantity();
+        for (OrderItemDto item : order.items()) {
+            int promotionAppliedQuantity = item.promotionAppliedQuantity();
             if (promotionAppliedQuantity != 0) {
-                printF(ReceiptFormType.GIVEAWAY.getFormatted(), item.getName(), promotionAppliedQuantity);
+                printF(ReceiptFormType.GIVEAWAY.getFormatted(), item.name(), promotionAppliedQuantity);
             }
         }
     }

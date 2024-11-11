@@ -1,10 +1,15 @@
 package store.controller;
 
+import java.util.List;
 import java.util.NoSuchElementException;
+import store.dto.ItemDto;
+import store.dto.OrderDto;
+import store.dto.OrderItemDto;
 import store.error.PromotionConfirmationForFreeException;
 import store.error.PurchaseConfirmationWithoutPromotionException;
 import store.model.Answer;
 import store.model.item.Inventory;
+import store.model.item.Item;
 import store.model.order.Order;
 import store.model.order.OrderCalculator;
 import store.model.order.OrderItem;
@@ -24,7 +29,7 @@ public class StoreController {
 
     public void run() {
         try {
-            OutputView.printItems(inventory.getItems());
+            printItems(inventory.getItems());
             Order order = getOrder();
             printReceipt(order, isMembershipDiscountAccepted());
             if (isAdditionalPurchaseConfirmed()) {
@@ -33,6 +38,13 @@ public class StoreController {
         } catch (NoSuchElementException e) {
             OutputView.printMessage(e.getMessage());
         }
+    }
+
+    private void printItems(List<Item> items) {
+        List<ItemDto> itemsDTO = items.stream()
+                .map(ItemDto::new)
+                .toList();
+        OutputView.printItems(itemsDTO);
     }
 
     private Order getOrder() {
@@ -96,7 +108,8 @@ public class StoreController {
 
     private void printReceipt(Order order, boolean isMembership) {
         PaymentSummary paymentSummary = OrderCalculator.calculateAmounts(order.getOrderItems(), isMembership);
-        OutputView.printReceipt(order, paymentSummary);
+        List<OrderItemDto> orderItems = order.getOrderItems().stream().map(OrderItemDto::new).toList();
+        OutputView.printReceipt(new OrderDto(orderItems), paymentSummary);
     }
 
     private boolean isMembershipDiscountAccepted() {
