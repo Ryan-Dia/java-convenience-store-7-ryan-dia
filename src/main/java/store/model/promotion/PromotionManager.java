@@ -10,6 +10,9 @@ import store.utils.MarkdownReader;
 
 public class PromotionManager {
     private static final String PROMOTION_FILE_PATH = "src/main/resources/promotions.md";
+    private static final int END_HOUR = 23;
+    private static final int END_MINUTE = 59;
+    private static final int END_SECOND = 59;
 
     private final Map<String, Promotion> promotions = new HashMap<>();
 
@@ -24,7 +27,7 @@ public class PromotionManager {
             int buy = Integer.parseInt(data[1]);
             int get = Integer.parseInt(data[2]);
             LocalDateTime startDate = LocalDate.parse(data[3]).atStartOfDay();
-            LocalDateTime endDate = LocalDate.parse(data[4]).atTime(23, 59, 59);
+            LocalDateTime endDate = LocalDate.parse(data[4]).atTime(END_HOUR, END_MINUTE, END_SECOND);
             Promotion promotion = new Promotion(name, buy, get, startDate, endDate);
             promotions.put(name, promotion);
         }
