@@ -13,9 +13,7 @@ public class Order {
 
     public Order(String userOrder) {
         validate(userOrder);
-        List<OrderItem> parser = parse(userOrder);
-        this.orderItems = parser;
-
+        this.orderItems = parse(userOrder);
     }
 
     private void validate(String userOrder) {
