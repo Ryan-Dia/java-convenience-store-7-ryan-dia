@@ -115,6 +115,15 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
+    void 만약_재고가_0개라면_재고_없음_출력() {
+        assertSimpleTest(() -> {
+            run("[콜라-20]", "Y", "Y", "Y");
+            assertThat(output().replaceAll("\\s", ""))
+                    .contains("재고없음");
+        });
+    }
+
+    @Test
     void 예외_테스트() {
         assertSimpleTest(() -> {
             runException("[컵라면-12]", "N", "N");
