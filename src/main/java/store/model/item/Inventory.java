@@ -122,7 +122,7 @@ public class Inventory {
         int promotionQuantityForItem = getPromotionQuantityForItem(itemName);
         int minPromotionQuantity = getMinPromotionQuantity(itemName);
         if (minPromotionQuantity == 0) {
-            throw new IllegalStateException("[ERROR] 일어나면 안되는 에러가 발생했습니다. : Inventory");
+            throw new IllegalStateException("일어나면 안되는 에러가 발생했습니다. : Inventory");
         }
         int remainder = promotionQuantityForItem % minPromotionQuantity;
         return promotionQuantityForItem - remainder;

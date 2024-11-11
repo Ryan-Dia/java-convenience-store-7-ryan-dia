@@ -5,6 +5,7 @@ import store.model.promotion.Promotion;
 import store.model.promotion.PromotionManager;
 
 public class ItemRepository {
+    public static final String NO_ITEM = "존재하지 않는 상품입니다. 다시 입력해 주세요.";
     private final List<Item> items;
     private final PromotionManager promotionManager;
 
@@ -22,7 +23,7 @@ public class ItemRepository {
                 .filter(item -> item.getName().equals(itemName))
                 .filter(item -> item.getPromotionName() == null)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 상품목록에 존재하지 않는 상품입니다."));
+                .orElseThrow(() -> new IllegalArgumentException(NO_ITEM));
     }
 
     public Item findPromotionItemByName(String itemName) {
@@ -30,7 +31,7 @@ public class ItemRepository {
                 .filter(item -> item.getName().equals(itemName))
                 .filter(item -> item.getPromotionName() != null)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 상품목록에 존재하지 않는 상품입니다."));
+                .orElseThrow(() -> new IllegalArgumentException(NO_ITEM));
     }
 
     public int findPromotionItemQuantityByName(String itemName) {
@@ -48,7 +49,7 @@ public class ItemRepository {
                     return isEligibleForPromotion(itemName, item, promotion);
                 })
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 상품목록에 존재하지 않는 상품입니다."));
+                .orElseThrow(() -> new IllegalArgumentException(NO_ITEM));
     }
 
     private boolean isEligibleForPromotion(String itemName, Item item, Promotion promotion) {
@@ -98,7 +99,7 @@ public class ItemRepository {
     public void validateItemName(String itemName) {
         boolean hasItemName = items.stream().anyMatch(item -> itemName.equals(item.getName()));
         if (!hasItemName) {
-            throw new IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.");
+            throw new IllegalArgumentException(NO_ITEM);
         }
     }
 

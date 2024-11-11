@@ -36,7 +36,7 @@ public class StoreController {
                 run();
             }
         } catch (NoSuchElementException e) {
-            OutputView.printMessage(e.getMessage());
+            OutputView.printError(e.getMessage());
         }
     }
 
@@ -55,7 +55,7 @@ public class StoreController {
                 fulfillOrder(order);
                 return order;
             } catch (IllegalArgumentException e) {
-                OutputView.printMessage(e.getMessage());
+                OutputView.printError(e.getMessage());
             }
         }
     }
@@ -81,7 +81,7 @@ public class StoreController {
                 inventory.parseUserChoiceForFree(userChoice, e.getItem(), e.getOrderItem(), e.getShortfall());
                 break;
             } catch (IllegalArgumentException ex) {
-                OutputView.printMessage(ex.getMessage());
+                OutputView.printError(ex.getMessage());
             }
         }
     }
@@ -94,7 +94,7 @@ public class StoreController {
                         e.getRemainingPromotionQuantity(), e.getRemainingQuantity());
                 break;
             } catch (IllegalArgumentException ex) {
-                OutputView.printMessage(ex.getMessage());
+                OutputView.printError(ex.getMessage());
             }
         }
     }
@@ -119,7 +119,7 @@ public class StoreController {
                 Answer.validate(userMembershipInput);
                 return Answer.YES.isEqual(userMembershipInput);
             } catch (IllegalArgumentException e) {
-                OutputView.printMessage(e.getMessage());
+                OutputView.printError(e.getMessage());
             }
         }
     }
@@ -136,7 +136,7 @@ public class StoreController {
                 Answer.validate(userInput);
                 return userInput;
             } catch (IllegalArgumentException e) {
-                OutputView.printMessage(e.getMessage());
+                OutputView.printError(e.getMessage());
             }
         }
     }

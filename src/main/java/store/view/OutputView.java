@@ -19,6 +19,7 @@ public final class OutputView {
     private static final String PROMOTION = "행사할인";
     private static final String AMOUNT_DUE = "내실돈";
     private static final String EMPTY = "";
+    private static final String ERROR_MESSAGE_PREFIX = "[ERROR] ";
 
     private OutputView() {
     }
@@ -56,6 +57,10 @@ public final class OutputView {
 
     public static void printMessage(String message) {
         System.out.println(message);
+    }
+
+    public static void printError(String message) {
+        printMessage(ERROR_MESSAGE_PREFIX + message);
     }
 
     public static void printReceipt(OrderDto order, PaymentSummary paymentSummary) {
